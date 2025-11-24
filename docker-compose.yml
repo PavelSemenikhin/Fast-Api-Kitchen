@@ -1,0 +1,42 @@
+services:
+  pg:
+    image: postgres:15
+    restart: always
+    container_name: fastapi_pg
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  app:
+    build:
+      context: Fast-Api-App
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    env_file:
+        - src/.env.docker
+    working_dir: /src
+    command: >
+      uvicorn main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    volumes:
+      - ./src:/src
+    depends_on:
+      pg:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
