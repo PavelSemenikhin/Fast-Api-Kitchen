@@ -7,10 +7,13 @@ fastapi = "^0.120.4"
 uvicorn = {extras = ["standard"], version = "^0.38.0"}
 pydantic = {extras = ["email"], version = "^2.12.3"}
 pydantic-settings = "^2.11.0"
-sqlalchemy = {extras = ["asincio"], version = "^2.0.44"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.44"}
 asyncpg = "^0.30.0"
 alembic = "^1.17.1"
 orjson = "^3.11.4"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+bcrypt = "4.0.1"
+pyjwt = "^2.10.1"
 
 [dependency-groups]
 dev = [
