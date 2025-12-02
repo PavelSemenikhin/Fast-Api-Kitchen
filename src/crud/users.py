@@ -1,40 +1,47 @@
-from typing import Sequence
-
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import User
-from core.schemas.users import UserCreate
+from core.schemas.users import UserCreateSchema, UserLoginSchema
+from services.auth import hash_password, verify_password
 
 
-async def get_all_users(
-    db: AsyncSession,
-) -> Sequence[User]:
-    stmt = select(User).order_by(User.id)
-    result = await db.execute(stmt)
-    users = result.scalars().all()
+async def create_user(user_data: UserCreateSchema, db: AsyncSession) -> User | None:
 
-    if not users:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No users found",
-        )
+    stmt = await db.execute(
+        select(User).where(User.email == user_data.email),
+    )
+    result = stmt.scalar_one_or_none()
+    if result:
+        return None
 
-    return users
-
-
-async def create_user(
-    db: AsyncSession,
-    user_create: UserCreate,
-) -> User:
+    hashed = hash_password(user_data.password)
 
     user = User(
-        username=user_create.username,
+        username=user_data.username,
+        email=user_data.email,
+        hashed_password=hashed,
     )
 
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    return user
 
+
+async def authenticate_user(
+    user_data: UserLoginSchema, db: AsyncSession
+) -> User | None:
+    stmt = await db.execute(
+        select(User).where(User.username == user_data.username),
+    )
+    user = stmt.scalar_one_or_none()
+
+    if not user:
+        return None
+
+    if not verify_password(
+        plain_password=user_data.password, hashed_password=user.hashed_password
+    ):
+        return None
     return user
