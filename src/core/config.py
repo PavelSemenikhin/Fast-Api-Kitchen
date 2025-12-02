@@ -14,7 +14,7 @@ class RunConfig(BaseModel):
 
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
-    users: str = "/users"
+    auth: str = "/auth"
 
 
 class ApiPrefix(BaseModel):
@@ -39,6 +39,11 @@ class DatabaseConfig(BaseModel):
     }
 
 
+class JWTSettings(BaseSettings):
+    secret_key: str
+    refresh_secret_key: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         # env_file=".env.local",
@@ -52,6 +57,8 @@ class Settings(BaseSettings):
     api: ApiPrefix = ApiPrefix()
 
     db: DatabaseConfig
+
+    jwt: JWTSettings
 
     def log_active_env(self):
         parsed = urlparse(str(self.db.url))
